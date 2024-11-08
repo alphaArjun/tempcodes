@@ -1,0 +1,202 @@
+pagination
+
+ng add @angular/material
+
+-----
+
+  <!-- app.component.html -->
+<div class="dropdown-container">
+  <div class="dropdown">
+    <button (click)="toggleDropdown('main')" class="dropdown-button">Main Dropdown</button>
+    <div class="dropdown-content" *ngIf="isMainDropdownOpen">
+      <a (click)="toggleDropdown('nested1')">Nested Dropdown 1</a>
+      <div class="dropdown-content nested" *ngIf="isNested1Open">
+        <a href="#">Item 1.1</a>
+        <a href="#">Item 1.2</a>
+      </div>
+      
+      <a (click)="toggleDropdown('nested2')">Nested Dropdown 2</a>
+      <div class="dropdown-content nested" *ngIf="isNested2Open">
+        <a href="#">Item 2.1</a>
+        <a href="#">Item 2.2</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+  ------
+
+  // app.component.ts
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.css']
+})
+export class AppComponent {
+  isMainDropdownOpen = false;
+  isNested1Open = false;
+  isNested2Open = false;
+
+  toggleDropdown(type: string) {
+    if (type === 'main') {
+      this.isMainDropdownOpen = !this.isMainDropdownOpen;
+      this.isNested1Open = false;
+      this.isNested2Open = false;
+    } else if (type === 'nested1') {
+      this.isNested1Open = !this.isNested1Open;
+      this.isNested2Open = false;
+    } else if (type === 'nested2') {
+      this.isNested2Open = !this.isNested2Open;
+      this.isNested1Open = false;
+    }
+  }
+}
+
+
+
+-----
+
+
+  /* app.component.css */
+.dropdown-container {
+  position: relative;
+}
+
+.dropdown-button {
+  padding: 10px;
+  background-color: #008CBA;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background-color: #f9f9f9;
+  min-width: 160px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  z-index: 1;
+}
+
+.dropdown-content a {
+  color: black;
+  padding: 12px 16px;
+  text-decoration: none;
+  display: block;
+}
+
+.dropdown-content a:hover {
+  background-color: #f1f1f1;
+}
+
+.dropdown-content.nested {
+  position: absolute;
+  left: 100%;
+  top: 0;
+}
+
+.dropdown-content.nested a {
+  white-space: nowrap;
+}
+
+.dropdown-content {
+  display: block;
+}
+
+__________
+__________
+
+npm install ngx-pagination
+
+-----
+  import { NgxPaginationModule } from 'ngx-pagination';
+
+@NgModule({
+  imports: [
+    NgxPaginationModule
+  ]
+})
+export class AppModule { }
+
+-----
+<!-- app.component.html -->
+<div *ngFor="let item of items | paginate: { itemsPerPage: 5, currentPage: p }">
+  <div>{{ item.name }}</div>
+</div>
+
+<pagination-controls (pageChange)="p = $event"></pagination-controls>
+
+
+
+  -----
+  
+
+
+  // app.component.ts
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.css']
+})
+export class AppComponent {
+  p: number = 1; // current page
+  items = Array(50).fill(0).map((_, i) => ({ name: `Item ${i + 1}` })); // Sample items
+}
+
+
+-----
+  /* app.component.css */
+.pagination-controls {
+  margin-top: 20px;
+}
+
+
+-----
+
+  <!-- app.component.html -->
+<div *ngFor="let item of getPaginatedItems()">
+  <div>{{ item.name }}</div>
+</div>
+
+<button (click)="goToPage(p - 1)" [disabled]="p === 1">Previous</button>
+<button (click)="goToPage(p + 1)" [disabled]="p === totalPages">Next</button>
+
+
+-----
+
+  // app.component.ts
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.css']
+})
+export class AppComponent {
+  p: number = 1;
+  items = Array(50).fill(0).map((_, i) => ({ name: `Item ${i + 1}` }));
+  itemsPerPage: number = 5;
+
+  get totalPages(): number {
+    return Math.ceil(this.items.length / this.itemsPerPage);
+  }
+
+  getPaginatedItems() {
+    const startIndex = (this.p - 1) * this.itemsPerPage;
+    const endIndex = startIndex + this.itemsPerPage;
+    return this.items.slice(startIndex, endIndex);
+  }
+
+  goToPage(page: number) {
+    if (page >= 1 && page <= this.totalPages) {
+      this.p = page;
+    }
+  }
+}
+
