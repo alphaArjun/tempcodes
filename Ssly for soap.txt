@@ -1,0 +1,71 @@
+<dependency>
+    <groupId>org.apache.httpcomponents</groupId>
+    <artifactId>httpclient</artifactId>
+    <version>4.5.13</version>
+</dependency>
+
+<dependency>
+    <groupId>org.apache.httpcomponents</groupId>
+    <artifactId>httpcore</artifactId>
+    <version>4.4.13</version>
+</dependency>
+
+
+
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.conn.DefaultHttpRoutePlanner;
+import java.io.*;
+import java.security.KeyStore;
+import org.apache.http.impl.client.HttpClient;
+import org.apache.http.impl.conn.ManagedHttpClientConnectionFactory;
+import javax.net.ssl.*;
+
+public class SoapRequestWithSSLUsingHttpClient {
+    public static void main(String[] args) throws Exception {
+        // Load your keystore and set SSL context
+        String keystorePath = "path/to/keystore.jks";
+        String keystorePassword = "keystorePassword";
+
+        KeyStore keystore = KeyStore.getInstance("JKS");
+        keystore.load(new FileInputStream(keystorePath), keystorePassword.toCharArray());
+
+        // SSLContext
+        SSLContext sslContext = SSLContexts.custom()
+                .loadKeyMaterial(keystore, keystorePassword.toCharArray())
+                .loadTrustMaterial(keystore)
+                .build();
+
+        // Create HttpClient with SSLContext
+        CloseableHttpClient httpClient = HttpClients.custom()
+                .setSSLContext(sslContext)
+                .build();
+
+        // SOAP request XML
+        String soapXML = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+                         + "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\""
+                         + " xmlns:web=\"http://www.example.com/webservice\">"
+                         + "<soapenv:Header/>"
+                         + "<soapenv:Body>"
+                         + "<web:YourSoapMethod>"
+                         + "<web:parameter>value</web:parameter>"
+                         + "</web:YourSoapMethod>"
+                         + "</soapenv:Body>"
+                         + "</soapenv:Envelope>";
+
+        // Send SOAP request
+        HttpPost postRequest = new HttpPost("https://your-soap-service-endpoint");
+        postRequest.setEntity(new StringEntity(soapXML));
+        postRequest.setHeader("Content-Type", "text/xml;charset=UTF-8");
+        postRequest.setHeader("SOAPAction", "your-soap-action");
+
+        // Execute the request and get the response
+        try (CloseableHttpResponse response = httpClient.execute(postRequest)) {
+            System.out.println("Response Status: " + response.getStatusLine());
+            // Handle the response
+        }
+    }
+}
